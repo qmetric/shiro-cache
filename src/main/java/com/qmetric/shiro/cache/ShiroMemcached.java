@@ -3,12 +3,10 @@ package com.qmetric.shiro.cache;
 import com.google.common.collect.Lists;
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.MemcachedClient;
+import org.apache.log4j.Logger;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,7 +16,7 @@ import java.util.Set;
 //todo dfarr. this class is dump and not scalable. it also swallows cache exceptions so clients should be aware it can fail silently
 public class ShiroMemcached implements Cache<String, Object> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ShiroMemcached.class);
+    private static final Logger LOG = Logger.getLogger(ShiroMemcached.class);
 
     private final List<MemcachedClient> clients;
 
