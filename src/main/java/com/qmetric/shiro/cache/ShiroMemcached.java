@@ -32,6 +32,9 @@ public class ShiroMemcached implements Cache<String, Object> {
                 LOG.error(String.format("client {%s} throw an exception", address), e);
             }
         }
+
+        LOG.debug(String.format("Clients configured {%s}", clients));
+
     }
 
     public Object get(String key) throws CacheException {
@@ -39,14 +42,14 @@ public class ShiroMemcached implements Cache<String, Object> {
         for (MemcachedClient client : clients) {
             try {
                 value = client.get(key);
-                LOG.debug(String.format("Get {%s} from Client {%s} returns {%s}", key, client.getVersions(), value));
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", client.getVersions()), e);
             }
         }
 
-        return value;
+        LOG.debug(String.format("Get {%s} returns {%s}", key, value));
 
+        return value;
     }
 
     public Object put(String key, Object value) throws CacheException {
@@ -55,11 +58,12 @@ public class ShiroMemcached implements Cache<String, Object> {
             try {
                 previous = get(key);
                 client.set(key, 0, value);
-                LOG.debug(String.format("Put {%s:%s} to Client {%s} previous returns {%s}", key, value, client.getVersions(), previous));
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", client.getVersions()), e);
             }
         }
+
+        LOG.debug(String.format("Put {%s:%s} Previous returns {%s}", key, value, previous));
 
         return previous;
     }
@@ -70,11 +74,12 @@ public class ShiroMemcached implements Cache<String, Object> {
             try {
                 previous = get(key);
                 client.delete(key);
-                LOG.debug(String.format("Remove {%s} from Client {%s} previous returns {%s}", key, client.getVersions(), previous));
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", client.getVersions()), e);
             }
         }
+
+        LOG.debug(String.format("Remove {%s} Previous returns {%s}", key, previous));
 
         return previous;
     }
