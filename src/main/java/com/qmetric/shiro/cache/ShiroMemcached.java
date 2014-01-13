@@ -41,9 +41,9 @@ public class ShiroMemcached implements Cache<String, Object> {
         for (MemcachedClient client : clients) {
             try {
                 value = client.get(key);
+                LOG.debug(String.format("Get {%s} from Client {%s} returns {%s}", key, client.getVersions(), value));
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", client.getVersions()), e);
-
             }
         }
 
@@ -57,6 +57,7 @@ public class ShiroMemcached implements Cache<String, Object> {
             try {
                 previous = get(key);
                 client.set(key, 0, value);
+                LOG.debug(String.format("Put {%s:%s} to Client {%s} previous returns {%s}", key, value, client.getVersions(), previous));
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", client.getVersions()), e);
             }
@@ -71,6 +72,7 @@ public class ShiroMemcached implements Cache<String, Object> {
             try {
                 previous = get(key);
                 client.delete(key);
+                LOG.debug(String.format("Remove {%s} from Client {%s} previous returns {%s}", key, client.getVersions(), previous));
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", client.getVersions()), e);
             }
