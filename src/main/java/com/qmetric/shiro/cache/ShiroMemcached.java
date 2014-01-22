@@ -17,6 +17,7 @@ import java.util.Set;
 public class ShiroMemcached implements Cache<String, Object> {
 
     private static final Logger LOG = Logger.getLogger(ShiroMemcached.class);
+    public static final int EXPIRE_IN_30_MINUTES = 1800;
 
     private final List<MemcachedClient> clients;
 
@@ -57,7 +58,7 @@ public class ShiroMemcached implements Cache<String, Object> {
         for (MemcachedClient client : clients) {
             try {
                 previous = get(key);
-                client.set(key, 0, value);
+                client.set(key, EXPIRE_IN_30_MINUTES, value);
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", client.getVersions()), e);
             }
