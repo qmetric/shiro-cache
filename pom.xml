@@ -4,7 +4,7 @@
 
     <groupId>com.qmetric</groupId>
     <artifactId>shiro-cache</artifactId>
-    <version>1.7-SNAPSHOT</version>
+    <version>1.7</version>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -89,6 +89,6 @@
         <url>git://github.com/qmetric/shiro-cache.git</url>
         <connection>scm:git:git://github.com/qmetric/shiro-cache.git</connection>
         <developerConnection>scm:git:git@github.com:qmetric/shiro-cache.git</developerConnection>
-      <tag>HEAD</tag>
+      <tag>shiro-cache-1.7</tag>
   </scm>
 </project>
