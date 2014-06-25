@@ -1,5 +1,6 @@
 package com.qmetric.shiro.cache;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
@@ -8,7 +9,6 @@ import org.apache.shiro.util.Destroyable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -47,6 +47,12 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
     }
 
     public void setServerList(final String[] serverList) {
-        this.serverList = Arrays.asList(serverList);
+        List<String> list = Lists.newArrayList();
+        if (serverList != null) {
+            for (String server : serverList) {
+                list.add(server.replaceAll("\"", ""));
+            }
+        }
+        this.serverList = list;
     }
 }
