@@ -1,18 +1,20 @@
 package com.qmetric.shiro.cache;
 
 import com.google.common.collect.Lists;
-import net.spy.memcached.AddrUtil;
-import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.*;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import static java.util.Arrays.asList;
 
 //todo dfarr. this class is dump and not scalable. it also swallows cache exceptions so clients should be aware it can fail silently
 public class ShiroMemcached implements Cache<String, Object> {
@@ -23,14 +25,15 @@ public class ShiroMemcached implements Cache<String, Object> {
 
     private final List<MemcachedClient> clients;
 
-    public ShiroMemcached(List<String> serverList) {
+    public ShiroMemcached(List<String> serverList) throws IOException {
         clients = Lists.newArrayList();
 
         List<InetSocketAddress> addresses = AddrUtil.getAddresses(serverList);
 
         for (InetSocketAddress address : addresses) {
             try {
-                clients.add(new MemcachedClient(address));
+                ConnectionFactory connectionFactory = new ConnectionFactoryBuilder().setDaemon(true).setFailureMode(FailureMode.Retry).build();
+                clients.add(new MemcachedClient(connectionFactory, asList(address)));
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", address), e);
             }

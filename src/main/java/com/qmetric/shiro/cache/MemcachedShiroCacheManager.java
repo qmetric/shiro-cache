@@ -9,6 +9,7 @@ import org.apache.shiro.util.Destroyable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,11 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
     public Cache getCache(String name) throws CacheException {
         LOG.debug(String.format("MemcachedShiroCacheManager.getCache(%s)", name));
 
-        if (nameIsNotFound(name)) clients.put(name, new ShiroMemcached(serverList));
+        if (nameIsNotFound(name)) try {
+            clients.put(name, new ShiroMemcached(serverList));
+        } catch (IOException e) {
+            throw new CacheException(e);
+        }
 
         return clients.get(name);
     }
