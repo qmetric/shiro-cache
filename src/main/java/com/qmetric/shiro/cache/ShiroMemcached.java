@@ -32,7 +32,7 @@ public class ShiroMemcached implements Cache<String, Object> {
 
         for (InetSocketAddress address : addresses) {
             try {
-                ConnectionFactory connectionFactory = new ConnectionFactoryBuilder().setDaemon(true).setFailureMode(FailureMode.Retry).build();
+                ConnectionFactory connectionFactory = new ConnectionFactoryBuilder().setFailureMode(FailureMode.Retry).build();
                 clients.add(new MemcachedClient(connectionFactory, asList(address)));
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", address), e);
