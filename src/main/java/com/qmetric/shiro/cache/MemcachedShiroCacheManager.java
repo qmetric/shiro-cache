@@ -31,6 +31,7 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
 
     private List<String> serverList;
 
+    // do not remove this public constructor. it is used by clients that cannot perform constructor injections
     public MemcachedShiroCacheManager() {
     }
 
@@ -67,6 +68,7 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
         clients.clear();
     }
 
+    // do not remove this public method. it is used by clients that cannot perform constructor injections
     public void setServerList(final String[] serverList) {
         List<String> list = Lists.newArrayList();
         if (serverList != null) {
@@ -75,6 +77,11 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
             }
         }
         this.serverList = list;
+    }
+
+    // do not remove this public method. it is used by clients that cannot perform constructor injections
+    public void setExpiryTime(int time) {
+        this.expiryTime = time;
     }
 
     public String healthCheck() {
