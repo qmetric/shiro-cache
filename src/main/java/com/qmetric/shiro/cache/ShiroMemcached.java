@@ -22,20 +22,14 @@ public class ShiroMemcached implements Cache<String, Object> {
 
     private static final int DEFAULT_EXPIRATION_TIME_OF_20_MINUTES = 1200;
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-
     private int expiryTime = DEFAULT_EXPIRATION_TIME_OF_20_MINUTES;
 
     protected final List<MemcachedClient> clients;
-
-    private List<String> serverList;
 
     public ShiroMemcached(List<String> serverList) throws IOException {
         clients = Lists.newArrayList();
 
         List<InetSocketAddress> addresses = AddrUtil.getAddresses(serverList);
-
-        this.serverList = serverList;
 
         for (InetSocketAddress address : addresses) {
             try {
@@ -126,41 +120,5 @@ public class ShiroMemcached implements Cache<String, Object> {
 
     public Collection<Object> values() {
         return Collections.emptyList();
-    }
-
-    public String healthCheck() {
-        try {
-            String value = UUID.randomUUID().toString();
-            put("health-check-test", value);
-            Object valueStored = remove("health-check-test");
-            if (value.equals(valueStored)) {
-                return toJson(new HealthCheckDetails(true, String.format("Memcached %s is healthy", serverList)));
-            } else {
-                return toJson(new HealthCheckDetails(false, String.format("Memcached %s is unhealthy, failed to find test value", serverList)));
-            }
-        } catch (CacheException e) {
-            return toJson(new HealthCheckDetails(true, String.format("Memcached %s is unhealthy, %s", serverList, e.getMessage())));
-        } finally {
-            try {
-                remove("health-check-test");
-            } catch (CacheException e) {
-                // too late anyway
-            }
-        }
-    }
-
-    public class HealthCheckDetails {
-        public final boolean healthy;
-        public final String message;
-
-        public HealthCheckDetails(boolean healthy, String message) {
-            this.healthy = healthy;
-            this.message = message;
-        }
-    }
-
-    private String toJson(HealthCheckDetails details)
-    {
-        return GSON.toJson(details);
     }
 }

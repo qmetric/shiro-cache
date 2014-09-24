@@ -2,6 +2,8 @@ package com.qmetric.shiro.cache;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
@@ -12,11 +14,14 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @SuppressWarnings("unchecked")
 public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
 
     private static final Logger LOG = LoggerFactory.getLogger(MemcachedShiroCacheManager.class);
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private final Map<String, ShiroMemcached> clients = Maps.newConcurrentMap();
 
@@ -33,10 +38,12 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
     public Cache getCache(String name) throws CacheException {
         LOG.debug(String.format("MemcachedShiroCacheManager.getCache(%s)", name));
 
-        if (nameIsNotFound(name)) try {
-            clients.put(name, new ShiroMemcached(serverList));
-        } catch (IOException e) {
-            throw new CacheException(e);
+        if (nameIsNotFound(name)) {
+            try {
+                clients.put(name, new ShiroMemcached(serverList));
+            } catch (IOException e) {
+                throw new CacheException(e);
+            }
         }
 
         return clients.get(name);
@@ -59,5 +66,40 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
             }
         }
         this.serverList = list;
+    }
+
+    public String healthCheck() {
+        try {
+            String value = UUID.randomUUID().toString();
+            getCache("shiro-activeSessionCache").put("health-check-test", value);
+            Object valueStored = getCache("shiro-activeSessionCache").remove("health-check-test");
+            if (value.equals(valueStored)) {
+                return toJson(new HealthCheckDetails(true, String.format("Memcached %s is healthy", serverList)));
+            } else {
+                return toJson(new HealthCheckDetails(false, String.format("Memcached %s is unhealthy, failed to find test value", serverList)));
+            }
+        } catch (CacheException e) {
+            return toJson(new HealthCheckDetails(true, String.format("Memcached %s is unhealthy, %s", serverList, e.getMessage())));
+        } finally {
+            try {
+                getCache("shiro-activeSessionCache").remove("health-check-test");
+            } catch (CacheException e) {
+                // too late anyway
+            }
+        }
+    }
+
+    public class HealthCheckDetails {
+        public final boolean healthy;
+        public final String message;
+
+        public HealthCheckDetails(boolean healthy, String message) {
+            this.healthy = healthy;
+            this.message = message;
+        }
+    }
+
+    private String toJson(HealthCheckDetails details) {
+        return GSON.toJson(details);
     }
 }
