@@ -1,6 +1,8 @@
 package com.qmetric.shiro.cache;
 
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.spy.memcached.*;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
@@ -9,10 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -21,14 +20,22 @@ public class ShiroMemcached implements Cache<String, Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ShiroMemcached.class);
 
-    public static final int EXPIRE_IN_30_MINUTES = 1800;
+    private static final int DEFAULT_EXPIRATION_TIME_OF_20_MINUTES = 1200;
 
-    private final List<MemcachedClient> clients;
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    private int expiryTime = DEFAULT_EXPIRATION_TIME_OF_20_MINUTES;
+
+    protected final List<MemcachedClient> clients;
+
+    private List<String> serverList;
 
     public ShiroMemcached(List<String> serverList) throws IOException {
         clients = Lists.newArrayList();
 
         List<InetSocketAddress> addresses = AddrUtil.getAddresses(serverList);
+
+        this.serverList = serverList;
 
         for (InetSocketAddress address : addresses) {
             try {
@@ -40,7 +47,15 @@ public class ShiroMemcached implements Cache<String, Object> {
         }
 
         LOG.debug(String.format("Clients configured {%s}", clients));
+    }
 
+    protected ShiroMemcached(List<String> serverList, int expiryTime) throws IOException {
+        this(serverList);
+        this.expiryTime = expiryTime;
+    }
+
+    private int getExpirationTime() {
+        return expiryTime;
     }
 
     public Object get(String key) throws CacheException {
@@ -63,7 +78,7 @@ public class ShiroMemcached implements Cache<String, Object> {
         for (MemcachedClient client : clients) {
             try {
                 previous = get(key);
-                client.set(key, EXPIRE_IN_30_MINUTES, value);
+                client.set(key, getExpirationTime(), value);
             } catch (Exception e) {
                 LOG.error(String.format("client {%s} throw an exception", client.getVersions()), e);
             }
@@ -111,5 +126,41 @@ public class ShiroMemcached implements Cache<String, Object> {
 
     public Collection<Object> values() {
         return Collections.emptyList();
+    }
+
+    public String healthCheck() {
+        try {
+            String value = UUID.randomUUID().toString();
+            put("health-check-test", value);
+            Object valueStored = remove("health-check-test");
+            if (value.equals(valueStored)) {
+                return toJson(new HealthCheckDetails(true, String.format("Memcached %s is healthy", serverList)));
+            } else {
+                return toJson(new HealthCheckDetails(false, String.format("Memcached %s is unhealthy, failed to find test value", serverList)));
+            }
+        } catch (CacheException e) {
+            return toJson(new HealthCheckDetails(true, String.format("Memcached %s is unhealthy, %s", serverList, e.getMessage())));
+        } finally {
+            try {
+                remove("health-check-test");
+            } catch (CacheException e) {
+                // too late anyway
+            }
+        }
+    }
+
+    public class HealthCheckDetails {
+        public final boolean healthy;
+        public final String message;
+
+        public HealthCheckDetails(boolean healthy, String message) {
+            this.healthy = healthy;
+            this.message = message;
+        }
+    }
+
+    private String toJson(HealthCheckDetails details)
+    {
+        return GSON.toJson(details);
     }
 }
