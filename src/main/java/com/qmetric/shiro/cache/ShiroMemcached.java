@@ -20,13 +20,12 @@ public class ShiroMemcached implements Cache<String, Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ShiroMemcached.class);
 
-    private static final int DEFAULT_EXPIRATION_TIME_OF_20_MINUTES = 1200;
+    private final List<MemcachedClient> clients;
 
-    private int expiryTime = DEFAULT_EXPIRATION_TIME_OF_20_MINUTES;
+    private final int expiryTime;
 
-    protected final List<MemcachedClient> clients;
-
-    public ShiroMemcached(List<String> serverList) throws IOException {
+    public ShiroMemcached(List<String> serverList, int expiryTime) throws IOException {
+        this.expiryTime = expiryTime;
         clients = Lists.newArrayList();
 
         List<InetSocketAddress> addresses = AddrUtil.getAddresses(serverList);
@@ -41,11 +40,6 @@ public class ShiroMemcached implements Cache<String, Object> {
         }
 
         LOG.debug(String.format("Clients configured {%s}", clients));
-    }
-
-    protected ShiroMemcached(List<String> serverList, int expiryTime) throws IOException {
-        this(serverList);
-        this.expiryTime = expiryTime;
     }
 
     private int getExpirationTime() {

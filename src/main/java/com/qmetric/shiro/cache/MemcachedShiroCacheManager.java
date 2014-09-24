@@ -23,6 +23,10 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+    private static final int DEFAULT_EXPIRATION_TIME_OF_20_MINUTES = 1200;
+
+    private int expiryTime = DEFAULT_EXPIRATION_TIME_OF_20_MINUTES;
+
     private final Map<String, ShiroMemcached> clients = Maps.newConcurrentMap();
 
     private List<String> serverList;
@@ -34,13 +38,18 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
         setServerList(serverList);
     }
 
+    public MemcachedShiroCacheManager(final String[] serverList, int expiryTime) {
+        this(serverList);
+        this.expiryTime = expiryTime;
+    }
+
     @Override
     public Cache getCache(String name) throws CacheException {
         LOG.debug(String.format("MemcachedShiroCacheManager.getCache(%s)", name));
 
         if (nameIsNotFound(name)) {
             try {
-                clients.put(name, new ShiroMemcached(serverList));
+                clients.put(name, new ShiroMemcached(serverList, expiryTime));
             } catch (IOException e) {
                 throw new CacheException(e);
             }
