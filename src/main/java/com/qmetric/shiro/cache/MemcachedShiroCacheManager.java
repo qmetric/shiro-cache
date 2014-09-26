@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @SuppressWarnings("unchecked")
-public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
+public class MemcachedShiroCacheManager implements CacheManager, Destroyable, HealthCheck {
 
     private static final Logger LOG = LoggerFactory.getLogger(MemcachedShiroCacheManager.class);
 
@@ -84,7 +84,7 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable {
         this.expiryTime = time;
     }
 
-    public String healthCheck() {
+    @Override public String healthCheck() {
         try {
             String value = UUID.randomUUID().toString();
             getCache("shiro-activeSessionCache").put("health-check-test", value);
