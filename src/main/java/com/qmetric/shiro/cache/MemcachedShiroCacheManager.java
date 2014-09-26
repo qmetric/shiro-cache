@@ -25,7 +25,7 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable, He
 
     private static final int DEFAULT_EXPIRATION_TIME_OF_20_MINUTES = 1200;
 
-    private int expiryTime = DEFAULT_EXPIRATION_TIME_OF_20_MINUTES;
+    private int expiryTimeInSeconds = DEFAULT_EXPIRATION_TIME_OF_20_MINUTES;
 
     private final Map<String, ShiroMemcached> clients = Maps.newConcurrentMap();
 
@@ -39,9 +39,9 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable, He
         setServerList(serverList);
     }
 
-    public MemcachedShiroCacheManager(final String[] serverList, int expiryTime) {
+    public MemcachedShiroCacheManager(final String[] serverList, int expiryTimeInSeconds) {
         this(serverList);
-        this.expiryTime = expiryTime;
+        this.expiryTimeInSeconds = expiryTimeInSeconds;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable, He
 
         if (nameIsNotFound(name)) {
             try {
-                clients.put(name, new ShiroMemcached(serverList, expiryTime));
+                clients.put(name, new ShiroMemcached(serverList, expiryTimeInSeconds));
             } catch (IOException e) {
                 throw new CacheException(e);
             }
@@ -80,8 +80,8 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable, He
     }
 
     // do not remove this public method. it is used by clients that cannot perform constructor injections
-    public void setExpiryTime(int time) {
-        this.expiryTime = time;
+    public void setExpiryTimeInSeconds(int time) {
+        this.expiryTimeInSeconds = time;
     }
 
     @Override public String healthCheck() {

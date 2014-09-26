@@ -26,18 +26,19 @@ public class ShiroMemcached implements Cache<String, Object> {
 
     private final List<String> serverList;
 
-    private final int expiryTime;
+    private final int expiryTimeInSeconds;
 
-    public ShiroMemcached(List<String> serverList, int expiryTime) throws IOException {
+    public ShiroMemcached(List<String> serverList, int expiryTimeInSeconds) throws IOException {
         this.serverList = serverList;
-        this.expiryTime = expiryTime;
+
+        this.expiryTimeInSeconds = expiryTimeInSeconds;
 
         clients = buildMemcachdClients(serverList);
 
         LOG.debug(String.format("Clients configured {%s}", clients));
     }
 
-    private List buildMemcachdClients(List<String> serverList) {
+    private List<MemcachedClient> buildMemcachdClients(List<String> serverList) {
         List<MemcachedClient> clients = Lists.newArrayList();
 
         List<InetSocketAddress> addresses = AddrUtil.getAddresses(serverList);
@@ -55,8 +56,8 @@ public class ShiroMemcached implements Cache<String, Object> {
         return clients;
     }
 
-    private int getExpirationTime() {
-        return expiryTime;
+    public int getExpiryTimeInSeconds() {
+        return expiryTimeInSeconds;
     }
 
     public Object get(String key) throws CacheException {
@@ -84,7 +85,7 @@ public class ShiroMemcached implements Cache<String, Object> {
         for (MemcachedClient client : clients) {
             try {
                 previous = get(key);
-                client.set(key, getExpirationTime(), value);
+                client.set(key, getExpiryTimeInSeconds(), value);
             } catch (Exception e) {
                 LOG.error(String.format("On put {%s:%s}, client {%s} throw an exception", key, value, getServer(i)), e);
             }
