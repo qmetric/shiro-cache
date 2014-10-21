@@ -95,7 +95,7 @@ public class MemcachedShiroCacheManager implements CacheManager, Destroyable, He
                 return toJson(new HealthCheckDetails(false, String.format("Memcached %s is unhealthy, failed to find test value", serverList)));
             }
         } catch (CacheException e) {
-            return toJson(new HealthCheckDetails(true, String.format("Memcached %s is unhealthy, %s", serverList, e.getMessage())));
+            return toJson(new HealthCheckDetails(false, String.format("Memcached %s is unhealthy, %s", serverList, e.getMessage())));
         } finally {
             try {
                 getCache("shiro-activeSessionCache").remove("health-check-test");
